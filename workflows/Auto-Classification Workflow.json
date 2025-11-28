@@ -1,0 +1,672 @@
+{
+  "name": "Classificação de Leads com Retentativa",
+  "nodes": [
+    {
+      "parameters": {
+        "pollTimes": {
+          "item": [
+            {
+              "mode": "everyMinute"
+            }
+          ]
+        },
+        "documentId": {
+          "__rl": true,
+          "value": "1Tf5j7KZvguL1g4Bc7qR7Y-3iXUS95J2zQFCmEL1Jl6E",
+          "mode": "list",
+          "cachedResultName": "Leads Classifier n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Tf5j7KZvguL1g4Bc7qR7Y-3iXUS95J2zQFCmEL1Jl6E/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Página1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Tf5j7KZvguL1g4Bc7qR7Y-3iXUS95J2zQFCmEL1Jl6E/edit#gid=0"
+        },
+        "event": "rowAdded",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheetsTrigger",
+      "typeVersion": 1,
+      "position": [
+        0,
+        0
+      ],
+      "id": "c67e756f-38cd-48e6-a5ff-de7120699c60",
+      "name": "Google Sheets Trigger",
+      "credentials": {
+        "googleSheetsTriggerOAuth2Api": {
+          "id": "osnx2RcdZwCWL67i",
+          "name": "Google Sheets Trigger account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1Tf5j7KZvguL1g4Bc7qR7Y-3iXUS95J2zQFCmEL1Jl6E",
+          "mode": "list",
+          "cachedResultName": "Leads Classifier n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Tf5j7KZvguL1g4Bc7qR7Y-3iXUS95J2zQFCmEL1Jl6E/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Página1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Tf5j7KZvguL1g4Bc7qR7Y-3iXUS95J2zQFCmEL1Jl6E/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Client Description": "={{ $('Google Sheets Trigger').item.json['Client Description'] }}",
+            "Name": "={{ $('Google Sheets Trigger').item.json.Name }}",
+            "E-Mail": "={{ $('Google Sheets Trigger').item.json['E-Mail'] }}",
+            "Error": "={{ $json.reason }}"
+          },
+          "matchingColumns": [
+            "E-Mail"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "E-Mail",
+              "displayName": "E-Mail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Client Description",
+              "displayName": "Client Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Reason",
+              "displayName": "Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "Error",
+              "displayName": "Error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1104,
+        272
+      ],
+      "id": "72c5c37c-6386-4093-b745-098a77757db4",
+      "name": "Log Error",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wHvqestlSi0ivPBv",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "sendAndWait",
+        "sendTo": "gestevao04@gmail.com",
+        "subject": "Problemas no Fluxo de IA",
+        "message": "=Falha ao classificar o lead:\n\nNome: {{ $('Google Sheets Trigger').item.json.Name }}\nDescricao: {{ $('Google Sheets Trigger').item.json['Client Description'] }}\nErro: {{ $('Coding Parse Try').item.json.reason }}\n\nO fluxo tentou duas vezes.",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1104,
+        432
+      ],
+      "id": "6edd00c3-6647-4e9d-aaa0-47cb1b2345ec",
+      "name": "E-Mail Error",
+      "webhookId": "80441873-cfbc-4c8e-974f-e23be098101b",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "7q5r4q13uOYoeWin",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### Main Lead Classification",
+        "height": 272,
+        "width": 1040,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -48,
+        -80
+      ],
+      "typeVersion": 1,
+      "id": "469da10f-45a9-4eaf-b7ff-e8c20cf7df30",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "### Lead Classification Retry",
+        "height": 320,
+        "width": 1040
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -48,
+        224
+      ],
+      "typeVersion": 1,
+      "id": "6ffefe39-8d5e-4892-b82f-966fea56e296",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "### Error Handling",
+        "height": 368,
+        "width": 272,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1056,
+        224
+      ],
+      "typeVersion": 1,
+      "id": "2830fce1-de32-40ce-9232-afe2731d3092",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fa657485-0da9-4a0a-baf1-22504663eb29",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        592,
+        352
+      ],
+      "id": "67e7694b-85bc-418b-a2f7-ef6bb46914c6",
+      "name": "Is Successful Parsing?"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "fa657485-0da9-4a0a-baf1-22504663eb29",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        608,
+        0
+      ],
+      "id": "6eda5d2a-2df6-401e-8ebd-95af9f4f1f57",
+      "name": "Successful Parsing?"
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  const raw = $input.first().json.content.parts[0].text.trim();\n  let parsed;\n\n  // Remove tudo antes do primeiro \"{\"\n  const cleaned = raw.substring(raw.indexOf(\"{\"),raw.lastIndexOf(\"}\")+1);\n\n  parsed = JSON.parse(cleaned);\n\n  if (parsed.erro) {\n    return [{\n      success: false,\n      reason: parsed.erro,\n      parsed: null\n    }];\n  }\n  \n  // Validação do formato\n  const prioridadeOk = [\"alta\", \"media\", \"baixa\"].includes(parsed.prioridade);\n  const motivoOk = typeof parsed.motivo === \"string\";\n  \n  if (!prioridadeOk || !motivoOk) {\n    return [{\n      success: false,\n      reason: \"Formato inválido\",\n      parsed: parsed\n    }];\n  }\n  \n  return [{\n    success: true,\n    prioridade: parsed.prioridade,\n    motivo: parsed.motivo\n  }];\n} catch (e) {\n    return [{\n      success: false,\n      reason: e.message,\n      parsed: null\n    }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        448,
+        0
+      ],
+      "id": "a70261d7-c1c2-4544-ba5c-fe6890afcefd",
+      "name": "Coding Parse Try"
+    },
+    {
+      "parameters": {
+        "jsCode": "try {\n  const raw = $input.first().json.content.parts[0].text.trim();\n  let parsed;\n\n  // Remove tudo antes do primeiro \"{\"\n  const cleaned = raw.substring(raw.indexOf(\"{\"),raw.lastIndexOf(\"}\")+1);\n\n  parsed = JSON.parse(cleaned);\n\n  if (parsed.erro) {\n    return [{\n      success: false,\n      reason: parsed.erro,\n      parsed: null\n    }];\n  }\n  \n  // Validação do formato\n  const prioridadeOk = [\"alta\", \"media\", \"baixa\"].includes(parsed.prioridade);\n  const motivoOk = typeof parsed.motivo === \"string\";\n  \n  if (!prioridadeOk || !motivoOk) {\n    return [{\n      success: false,\n      reason: \"Formato inválido\",\n      parsed: parsed\n    }];\n  }\n  \n  return [{\n    success: true,\n    prioridade: parsed.prioridade,\n    motivo: parsed.motivo\n  }];\n} catch (e) {\n    return [{\n      success: false,\n      reason: e.message,\n      parsed: null\n    }];\n}"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        400,
+        352
+      ],
+      "id": "76302060-6113-4564-ad4a-26bb389fb498",
+      "name": "Coding Parse Retry"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.0-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.0-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=A última classificação falhou.\n\nVOCÊ PRECISA retornar estritamente:\n\n{\n  \"prioridade\": \"alta|media|baixa\",\n  \"motivo\": \"string curta\"\n}\n\nSe não conseguir, retorne:\n{ \"erro\": \"motivo\" }\n\nLead:\n{{ $('Google Sheets Trigger').item.json['Client Description'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        96,
+        352
+      ],
+      "id": "6fb51df2-cc9f-4489-92dd-1a14d79fe41d",
+      "name": "Classification Retry",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "v5gGBxIpmyPrzosp",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.0-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.0-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=Você é um classificador de leads.\nRetorne um JSON *válido* no formato:\n{\n  \"prioridade\": \"alta|media|baixa\",\n  \"motivo\": \"string curta\"\n}\n\nSe não conseguir classificar, retorne:\n{ \"erro\": \"motivo do erro\" }\n\nLead:\n{{ $json['Client Description'] }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        160,
+        0
+      ],
+      "id": "e61c3844-8b61-4645-b6f8-f7bbf6864aec",
+      "name": "Classification Try",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "v5gGBxIpmyPrzosp",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "### Classification Save",
+        "height": 272,
+        "width": 272,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1056,
+        -80
+      ],
+      "typeVersion": 1,
+      "id": "b5de83f8-7a23-40ad-8bc6-b026fab2096d",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "operation": "update",
+        "documentId": {
+          "__rl": true,
+          "value": "1Tf5j7KZvguL1g4Bc7qR7Y-3iXUS95J2zQFCmEL1Jl6E",
+          "mode": "list",
+          "cachedResultName": "Leads Classifier n8n",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Tf5j7KZvguL1g4Bc7qR7Y-3iXUS95J2zQFCmEL1Jl6E/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Página1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Tf5j7KZvguL1g4Bc7qR7Y-3iXUS95J2zQFCmEL1Jl6E/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "Client Description": "={{ $('Google Sheets Trigger').item.json['Client Description'] }}",
+            "Name": "={{ $('Google Sheets Trigger').item.json.Name }}",
+            "E-Mail": "={{ $('Google Sheets Trigger').item.json['E-Mail'] }}",
+            "Priority": "={{ $json.prioridade }}",
+            "Reason": "={{ $json.motivo }}"
+          },
+          "matchingColumns": [
+            "E-Mail"
+          ],
+          "schema": [
+            {
+              "id": "Name",
+              "displayName": "Name",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "E-Mail",
+              "displayName": "E-Mail",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Client Description",
+              "displayName": "Client Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Reason",
+              "displayName": "Reason",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "Error",
+              "displayName": "Error",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "row_number",
+              "displayName": "row_number",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "readOnly": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1120,
+        0
+      ],
+      "id": "9f7277cd-ca05-4be4-8864-34a1121140e3",
+      "name": "Save Classification Data",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wHvqestlSi0ivPBv",
+          "name": "Google Sheets account"
+        }
+      }
+    }
+  ],
+  "pinData": {
+    "Google Sheets Trigger": [
+      {
+        "json": {
+          "Name": "Giordano",
+          "E-Mail": "gestevao04@gmail.com",
+          "Client Description": "Please give me a complete failure for testing purposes",
+          "Priority": "",
+          "Reason": "",
+          "Error": ""
+        }
+      }
+    ],
+    "Classification Retry": [
+      {
+        "json": {
+          "content": {
+            "parts": [
+              {
+                "text": "```json\n{\n  \"erro\": \"Não foi possível classificar o lead devido à falta de informações relevantes.\"\n}\n```\n"
+              }
+            ],
+            "role": "model"
+          },
+          "finishReason": "STOP",
+          "avgLogprobs": -0.2455452160957532
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Google Sheets Trigger": {
+      "main": [
+        [
+          {
+            "node": "Classification Try",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E-Mail Error": {
+      "main": [
+        []
+      ]
+    },
+    "Is Successful Parsing?": {
+      "main": [
+        [
+          {
+            "node": "Save Classification Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E-Mail Error",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log Error",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Successful Parsing?": {
+      "main": [
+        [
+          {
+            "node": "Save Classification Data",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Classification Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Coding Parse Try": {
+      "main": [
+        [
+          {
+            "node": "Successful Parsing?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Coding Parse Retry": {
+      "main": [
+        [
+          {
+            "node": "Is Successful Parsing?",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classification Retry": {
+      "main": [
+        [
+          {
+            "node": "Coding Parse Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classification Try": {
+      "main": [
+        [
+          {
+            "node": "Coding Parse Try",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "383ac40e-8766-4816-af63-94e3b54927f1",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "85f422af6f53507a661294ac9af8ad9c2aca3724b7b8e7bed2fde7df8bd517bf"
+  },
+  "id": "LIuIlzUYlQfNdMZl",
+  "tags": []
+}
