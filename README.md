@@ -53,19 +53,43 @@ Automatically classify incoming leads as **high**, **medium**, or **low** priori
 
 ---
 
-## 📌 2. Developing
+## 📌 2. In Development — AI Ticket Intake
 
-### 🎯 Purpose
-TBD
+### 🎯 Objective
+Automatically classify, summarize, and generate an initial response for support tickets sent through a webhook — with strict validation, retries, and structured output suitable for internal workflows.
 
-### 🧠 Technical Overview
-
-- TBD
+### 🧩 Technologies
+- n8n
+- Google Gemini (multiple models)
+- PostgreSQL
+- Gmail (error alerts)
+- JavaScript (validation and control logic)
 
 ### 🖼 Screenshots
+![workflow-2-img1.png](screenshots/helpdesk-ai/img1.png)
+![workflow-2-img2.png](screenshots/helpdesk-ai/img2.png)
+![workflow-2-img3.png](screenshots/helpdesk-ai/img3.png)
+![workflow-2-img4.png](screenshots/helpdesk-ai/img4.png)
 
+---
 
-### 🧾 Workflow Export  
+### 🧠 Technical Explanation
+- Webhook receives the ticket payload (`title`, `description`, `customer_id`).
+- Fields are normalized to ensure consistent input across all LLM prompts.
+- Three independent Gemini models process the ticket:
+    - **Classification:** category + urgency (strict JSON)
+    - **Summary:** concise one-sentence summary for dashboards
+    - **Suggested response:** a professional first reply for the requester
+- A JavaScript node performs **strict JSON parsing and validation**:
+    - checks schema, required fields, and types
+    - triggers **automatic retries** (up to 3 attempts)
+    - on final failure, an error email is sent
+- Final structured data and logging is persisted in PostgreSQL for internal use.
+
+---
+
+### 🧾 Exported JSON
+[AI Ticket Intake Workflow.json](workflows/AI%20Ticket%20Intake%20Workflow.json)
 
 ---
 ## 📎 Contact

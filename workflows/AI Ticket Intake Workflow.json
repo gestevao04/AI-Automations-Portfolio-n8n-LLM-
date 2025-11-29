@@ -1,0 +1,1048 @@
+{
+  "name": "AI Ticket Intake",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "adb2ef02-21c8-4adc-94fe-844aed8f75b0",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        -480,
+        -16
+      ],
+      "id": "5a5b2529-ceb1-4984-91fa-196afb9be56c",
+      "name": "Webhook",
+      "webhookId": "adb2ef02-21c8-4adc-94fe-844aed8f75b0"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "ea589bed-88c9-4c27-b48a-d0ce067ecf0d",
+              "name": "title",
+              "value": "={{ $('Webhook').item.json.body.title }}",
+              "type": "string"
+            },
+            {
+              "id": "e00f2367-72e8-44ec-b671-9eb177baf2ee",
+              "name": "description",
+              "value": "={{ $('Webhook').item.json.body.description }}",
+              "type": "string"
+            },
+            {
+              "id": "f1472c07-fefd-4e70-8a2b-57ff8899a5d3",
+              "name": "customer_id",
+              "value": "={{ $('Webhook').item.json.body.customer_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        -96,
+        -16
+      ],
+      "id": "a59d71f4-ac02-4bb5-bb98-c52f3c7fe7a8",
+      "name": "Normalize Fields"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.0-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.0-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a Company Tickets Classifier.\n\nReturn a *valid* JSON *válido* on the following format:\n{\n  \"category\": \"incident|problem|request|other\";\n  \"urgency\": \"low|medium|high|critical\";\n}\n\nIf you are not able to classify, return:\n{ \"error\": \"error reason\" }\n\nLead:\n{{ $json.title }}: {{ $json.description }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        144,
+        160
+      ],
+      "id": "7ad21f26-6d8e-4dbe-a9f4-18f4b5cbc769",
+      "name": "Classification LLM",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "v5gGBxIpmyPrzosp",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.0-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.0-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a Company Tickets Summarizer.\n\nYou must summarize a ticket in 1 sentence.\nNo opinions, no irrelevant details.\n\nTicket:\n{{ $json.title }}: {{ $json.description }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        144,
+        -16
+      ],
+      "id": "01c0ad85-ae0c-4203-91a3-fe099ac66283",
+      "name": "Summary LLM",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "v5gGBxIpmyPrzosp",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.0-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.0-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a Company Tickets Response Agent.\n\nGenerate an educated, objective and professional response. \nNo irrelevant details.\nInclude:\n- Explanation\n- Next Steps\n- Confirmation or Evidence solicitation (if necessary)\n\nTicket:\n{{ $json.title }}: {{ $json.description }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        144,
+        -208
+      ],
+      "id": "779b65bc-ee92-4188-aff8-ef7305348d5e",
+      "name": "Response Suggestion LLM",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "v5gGBxIpmyPrzosp",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "mode": "list",
+          "value": "tickets"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "draft_response": "={{ $('LLM Responses Normalizer').item.json.suggestion }}",
+            "title": "={{ $('Normalize Fields').item.json.title }}",
+            "description": "={{ $('Normalize Fields').item.json.description }}",
+            "category": "={{ $('Parse LLM Response').item.json.category }}",
+            "urgency": "={{ $('Parse LLM Response').item.json.urgency }}",
+            "customer_id": "={{ $('Normalize Fields').item.json.customer_id }}",
+            "summary": "={{ $('LLM Summary Normalizer').item.json.summary }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "title",
+              "displayName": "title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "description",
+              "displayName": "description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "category",
+              "displayName": "category",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "urgency",
+              "displayName": "urgency",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "summary",
+              "displayName": "summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "draft_response",
+              "displayName": "draft_response",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "customer_id",
+              "displayName": "customer_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1120,
+        -16
+      ],
+      "id": "d50fb2a7-3d33-4a70-9aed-4d912f323dea",
+      "name": "Insert rows in a table",
+      "credentials": {
+        "postgres": {
+          "id": "LFNBaOAiASwFN8AQ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7fe172dc-870b-498c-a100-91b1c781306a",
+              "name": "suggestion",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        592,
+        -208
+      ],
+      "id": "dfb6961f-23ae-4327-a08c-3d6bf6be444f",
+      "name": "LLM Responses Normalizer"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "7fe172dc-870b-498c-a100-91b1c781306a",
+              "name": "summary",
+              "value": "={{ $json.content.parts[0].text }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        592,
+        -16
+      ],
+      "id": "4e4a3195-2e06-46af-bb22-91aedbb01fe0",
+      "name": "LLM Summary Normalizer"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "92571f38-29a1-4029-8e77-ee875bd6e2e0",
+              "leftValue": "={{ $json.retry }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        256,
+        416
+      ],
+      "id": "812bf8c4-494e-4af0-a284-e01d37ad7a13",
+      "name": "Should Retry"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  wait: 500 * ($('Parse LLM Response').first().json.retry_count ** 2)\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -16,
+        416
+      ],
+      "id": "7e3044f0-a4a1-4ad5-8039-c5fa85edeb05",
+      "name": "Wait Before Retry"
+    },
+    {
+      "parameters": {
+        "jsCode": "const { randomUUID } = require('crypto');\n\nreturn {\n      request_id: randomUUID(),\n      started_at: Date.now()\n    };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -304,
+        -16
+      ],
+      "id": "0885af63-fd58-4190-b516-5948fdd0535d",
+      "name": "Generate UUID"
+    },
+    {
+      "parameters": {
+        "content": "## Webhook Data Normalizer",
+        "height": 256,
+        "width": 576
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -528,
+        -96
+      ],
+      "typeVersion": 1,
+      "id": "02f57798-3aeb-40d9-96c0-6013a08cc136",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Retry with Logging",
+        "height": 272,
+        "width": 752,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -96,
+        352
+      ],
+      "typeVersion": 1,
+      "id": "6bdc979e-2f7f-4cf0-90e7-08a40903d2e4",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## LLMs and Response Normalizing",
+        "height": 544,
+        "width": 928,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        112,
+        -256
+      ],
+      "typeVersion": 1,
+      "id": "e57cec9f-e58b-41bf-b517-7dd7937db516",
+      "name": "Sticky Note2"
+    },
+    {
+      "parameters": {
+        "content": "## Saving Response",
+        "height": 256,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1072,
+        -96
+      ],
+      "typeVersion": 1,
+      "id": "8debf74f-79d3-4af7-ac5b-5a52974df642",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "92571f38-29a1-4029-8e77-ee875bd6e2e0",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        592,
+        160
+      ],
+      "id": "9530053a-4ded-4bc2-85bf-57693a4c0dfa",
+      "name": "Sucessful Parsing"
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const MAX_RETRIES = 3;\n\nif (!$json.retry_count) {\n  $json.retry_count = 0;\n}\n\ntry {\n  const text = $json.content.parts[0].text;\n  const parsed = JSON.parse(text);\n\n  return {\n      success: true,\n      category: parsed.category,\n      urgency: parsed.urgency,\n      retry_count: $json.retry_count\n    };\n} catch (err) {\n  if ($json.retry_count < MAX_RETRIES) {\n    return {\n        success: false,\n        error: err.message,\n        retry_count: $json.retry_count + 1,\n        retry: true\n      };\n  }\n\n  return {\n      success: false,\n      error: err.message,\n      retry: false,\n      retry_count: MAX_RETRIES\n    };\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        432,
+        160
+      ],
+      "id": "b4797355-0a35-4ccd-abbf-2cf483db7bae",
+      "name": "Parse LLM Response"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "3cea14d6-5f81-4ac2-836b-4c6471bb49aa",
+              "name": "workflow",
+              "value": "lead-classification",
+              "type": "string"
+            },
+            {
+              "id": "e9ede16e-002a-4765-b4ce-1d7c36b20ab9",
+              "name": "node",
+              "value": "Classification LLM",
+              "type": "string"
+            },
+            {
+              "id": "efd53c72-5d1f-4f67-a5a2-ccf7fc628f22",
+              "name": "phase",
+              "value": "classification",
+              "type": "string"
+            },
+            {
+              "id": "e0ddf4dc-ec62-4f03-acf5-0771a2f0c16c",
+              "name": "input",
+              "value": "={{ $('Webhook').item.json.body }}",
+              "type": "string"
+            },
+            {
+              "id": "3f4689dd-a17a-4a7a-bdfb-d1f23d4e29a1",
+              "name": "output",
+              "value": "={{ $('Classification LLM').item.json.content.parts[0].text }}",
+              "type": "string"
+            },
+            {
+              "id": "d3a38fc6-58ee-415b-8d74-35ec5487614d",
+              "name": "success",
+              "value": "={{ $('Parse LLM Response').item.json.success || false }}",
+              "type": "string"
+            },
+            {
+              "id": "39830d05-3d89-4d48-b9c0-d275e171e10d",
+              "name": "error_message",
+              "value": "={{ $('Parse LLM Response').item.json.err || null }}",
+              "type": "string"
+            },
+            {
+              "id": "79ee883a-9057-4a08-a445-6aa3788d27ee",
+              "name": "retry_count",
+              "value": "={{ $('Parse LLM Response').item.json.retry_count }}",
+              "type": "string"
+            },
+            {
+              "id": "2a7aaab5-2869-42d0-811d-f18f24c6edae",
+              "name": "request_id",
+              "value": "={{ $('Generate UUID').item.json.request_id }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        880,
+        432
+      ],
+      "id": "c0b6b0a4-9ca7-4a97-99fa-87b7f56e7c6e",
+      "name": "Map Data for Logging"
+    },
+    {
+      "parameters": {
+        "content": "## Logging",
+        "height": 256,
+        "width": 432,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        832,
+        368
+      ],
+      "typeVersion": 1,
+      "id": "3e1d879a-b89d-4e4a-abd8-b8891fc189da",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "value": "public",
+          "mode": "list",
+          "cachedResultName": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "automation_logs",
+          "mode": "list",
+          "cachedResultName": "automation_logs"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "duration_ms": "={{ ($now- $('Generate UUID').item.json.started_at) }}",
+            "retry_count": "={{ $json.retry_count }}",
+            "request_id": "={{ $json.request_id }}",
+            "workflow": "={{ $json.workflow }}",
+            "node": "={{ $json.node }}",
+            "phase": "={{ $json.phase }}",
+            "input": "={{ $json.input }}",
+            "output": "={{ $json.output }}",
+            "success": "={{ $json.success }}",
+            "error_message": "={{ $json.error_message }}"
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": true
+            },
+            {
+              "id": "request_id",
+              "displayName": "request_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "workflow",
+              "displayName": "workflow",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "node",
+              "displayName": "node",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "phase",
+              "displayName": "phase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "input",
+              "displayName": "input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "success",
+              "displayName": "success",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "retry_count",
+              "displayName": "retry_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "duration_ms",
+              "displayName": "duration_ms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true,
+              "removed": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1040,
+        432
+      ],
+      "id": "3ea1fb77-f2bc-4e7a-80bc-59bf61b0b9d3",
+      "name": "Log",
+      "credentials": {
+        "postgres": {
+          "id": "LFNBaOAiASwFN8AQ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "sendTo": "gestevao04@gmail.com",
+        "subject": "Parsing Error",
+        "message": "=ALERTA: Falha após 3 tentativas\nTicket: {{ $('Webhook').item.json.body.title }}\nErro: {{ $('Parse LLM Response').item.json.error }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        512,
+        432
+      ],
+      "id": "00b121b6-845c-4670-8af6-59ea7ee8dccd",
+      "name": "E-Mail Error Info",
+      "webhookId": "5126f474-f7c1-4d9c-9592-77e5e6511320",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "7q5r4q13uOYoeWin",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "empty"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        784,
+        -112
+      ],
+      "id": "ccf8a56b-1303-47f3-a837-999f3162a8cf",
+      "name": "Wait for Inputs",
+      "retryOnFail": false,
+      "executeOnce": false,
+      "alwaysOutputData": false
+    },
+    {
+      "parameters": {
+        "mode": "chooseBranch",
+        "output": "empty"
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        928,
+        -16
+      ],
+      "id": "ecf4f8eb-4511-49aa-8a89-fc9194681dec",
+      "name": "Wait for LLMs",
+      "retryOnFail": false,
+      "executeOnce": false,
+      "alwaysOutputData": false
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook": {
+      "main": [
+        [
+          {
+            "node": "Generate UUID",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Normalize Fields": {
+      "main": [
+        [
+          {
+            "node": "Classification LLM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Summary LLM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Response Suggestion LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Classification LLM": {
+      "main": [
+        [
+          {
+            "node": "Parse LLM Response",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summary LLM": {
+      "main": [
+        [
+          {
+            "node": "LLM Summary Normalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Response Suggestion LLM": {
+      "main": [
+        [
+          {
+            "node": "LLM Responses Normalizer",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Responses Normalizer": {
+      "main": [
+        [
+          {
+            "node": "Wait for Inputs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Summary Normalizer": {
+      "main": [
+        [
+          {
+            "node": "Wait for Inputs",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Should Retry": {
+      "main": [
+        [
+          {
+            "node": "Wait Before Retry",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "E-Mail Error Info",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Before Retry": {
+      "main": [
+        [
+          {
+            "node": "Classification LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Generate UUID": {
+      "main": [
+        [
+          {
+            "node": "Normalize Fields",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Insert rows in a table": {
+      "main": [
+        [
+          {
+            "node": "Map Data for Logging",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Sucessful Parsing": {
+      "main": [
+        [
+          {
+            "node": "Wait for LLMs",
+            "type": "main",
+            "index": 1
+          }
+        ],
+        [
+          {
+            "node": "Should Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Parse LLM Response": {
+      "main": [
+        [
+          {
+            "node": "Sucessful Parsing",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Map Data for Logging": {
+      "main": [
+        [
+          {
+            "node": "Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E-Mail Error Info": {
+      "main": [
+        [
+          {
+            "node": "Map Data for Logging",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for Inputs": {
+      "main": [
+        [
+          {
+            "node": "Wait for LLMs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for LLMs": {
+      "main": [
+        [
+          {
+            "node": "Insert rows in a table",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "55e875fe-82ad-4215-8640-a79b2e25b110",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "85f422af6f53507a661294ac9af8ad9c2aca3724b7b8e7bed2fde7df8bd517bf"
+  },
+  "id": "k1417qRGMvaOtAVi",
+  "tags": []
+}

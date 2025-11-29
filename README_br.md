@@ -1,6 +1,7 @@
 # 🤖 Portfólio de Automações com IA (n8n + LLM)
 
-Este repositório reúne automações criadas para demonstrar domínio em:
+Este repositório reúne automações
+criadas para demonstrar domínio em:
 - Integração n8n (iPaaS)
 - Modelos de linguagem (OpenAI)
 - Design de fluxos com IA
@@ -48,18 +49,43 @@ Classificar leads automaticamente como **alta**, **média** ou **baixa** priorid
 
 ---
 
-## 📌 2. Em Desenvolvimento
+## 📌 2. AI Ticket Intake
 
 ### 🎯 Objetivo
-TBD
+Classificar, resumir e gerar uma resposta inicial automática para tickets enviados via webhook, garantindo consistência, validação rigorosa e retentativas inteligentes quando o modelo retorna dados inválidos.
 
-### 🧠 Explicação Técnica)
-- TBD
+### 🧩 Tecnologias
+- n8n
+- Google Gemini (vários modelos)
+- PostgreSQL
+- Gmail (alertas de erro)
+- JavaScript (nodes de validação e lógica)
 
 ### 🖼 Prints
+![workflow-2-img1.png](screenshots/helpdesk-ai/img1.png)
+![workflow-2-img2.png](screenshots/helpdesk-ai/img2.png)
+![workflow-2-img3.png](screenshots/helpdesk-ai/img3.png)
+![workflow-2-img4.png](screenshots/helpdesk-ai/img4.png)
 
+---
+
+### 🧠 Explicação Técnica
+- Webhook recebe o ticket com `title`, `description` e `customer_id`.
+- Campos são normalizados para uso consistente entre todos os LLMs.
+- Três modelos Gemini atuam separadamente:
+    - **Classificação:** categoria + urgência (JSON estrito)
+    - **Resumo:** frase curta para dashboards internos
+    - **Resposta sugestiva:** mensagem inicial para o cliente
+- Node de código faz **parsing e validação** da classificação:
+    - checa JSON, tipos, campos obrigatórios
+    - aplica **retentativas automáticas** (até 3x)
+    - em falha final, envia alerta por email
+- Resultados consolidados e logs são persistidos no PostgreSQL para uso interno.
+
+---
 
 ### 🧾 JSON Exportado
+[AI Ticket Intake Workflow.json](workflows/AI%20Ticket%20Intake%20Workflow.json)
 
 ---
 ## 📎 Contato
