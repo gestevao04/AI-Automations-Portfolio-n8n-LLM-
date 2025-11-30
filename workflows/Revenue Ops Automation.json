@@ -1,0 +1,1293 @@
+{
+  "name": "Revenue Ops Automation",
+  "nodes": [
+    {
+      "parameters": {
+        "rule": {
+          "interval": [
+            {
+              "field": "hours"
+            }
+          ]
+        }
+      },
+      "type": "n8n-nodes-base.scheduleTrigger",
+      "typeVersion": 1.3,
+      "position": [
+        -208,
+        576
+      ],
+      "id": "594d8388-1027-47e9-b5f9-4cb173c3b0c5",
+      "name": "Schedule Trigger"
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.0-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.0-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are an Opportunity Summarizing Agent.\n\nSummarize the opportunity in 2–3 lines.\nOnly include relevant facts.\nNo opinions.\n\nOportunity:\nAmount: {{ $('Validate Opportunity Entry').item.json.amount || null }}\nDescription: {{ $('Validate Opportunity Entry').item.json.description || null }}\nOportunity Stage: {{ $('Validate Opportunity Entry').item.json.stage || null }}\nErrors: {{ $('Validate Opportunity Entry').item.json.errors || null }}\nMissing Fields: {{ $('Validate Opportunity Entry').item.json.missing_fields || null }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        832,
+        384
+      ],
+      "id": "7f362f77-b96a-4ce8-8e4f-48326b9f2f1e",
+      "name": "Summary LLM",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "v5gGBxIpmyPrzosp",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.0-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.0-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are an Next Steps Proposing Agent.\n\nGenerate the recommended next step for the Salesman.\nIf there are any missing data, suggest the data retrival.\nFormat: Only one sentence, clear, objective.\n\nOportunity:\nAmount: {{ $('Validate Opportunity Entry').item.json.amount || null }}\nDescription: {{ $('Validate Opportunity Entry').item.json.description || null }}\nOportunity Stage: {{ $('Validate Opportunity Entry').item.json.stage || null }}\nErrors: {{ $('Validate Opportunity Entry').item.json.errors || null }}\nMissing Fields: {{ $('Validate Opportunity Entry').item.json.missing_fields || null }}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        832,
+        576
+      ],
+      "id": "2795d956-2ab2-4695-857b-3353e98461d4",
+      "name": "Next Steps LLM",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "v5gGBxIpmyPrzosp",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "modelId": {
+          "__rl": true,
+          "value": "models/gemini-2.0-flash",
+          "mode": "list",
+          "cachedResultName": "models/gemini-2.0-flash"
+        },
+        "messages": {
+          "values": [
+            {
+              "content": "=You are a Opportunity Assessor.\n\nReturn a *valid* JSON *válido* on the following format:\n{\n  \"sugested_stage\": \"Discovery|Proposal|Negotiation|Closed Won|Closed Lost\",\n  \"amount_range\": \"string\",\n  \"priority\": \"low|medium|high|urgent\",\n  \"response_confidence\": 0-100,\n  \"classification\": \"Marketing|Sales|Customer Success|Other\"\n}\n\nIf you are not able to assess the opportunity, return:\n{ \"error\": \"error reason\" }\n\nOportunity:\nAmount: {{ $('Validate Opportunity Entry').item.json.amount || null }}\nDescription: {{ $('Validate Opportunity Entry').item.json.description || null }}\nOportunity Stage: {{ $('Validate Opportunity Entry').item.json.stage || null }}\nErrors: {{ $('Validate Opportunity Entry').item.json.errors || null }}\nMissing Fields: {{ $('Validate Opportunity Entry').item.json.missing_fields || null }}"
+            }
+          ]
+        },
+        "jsonOutput": true,
+        "options": {}
+      },
+      "type": "@n8n/n8n-nodes-langchain.googleGemini",
+      "typeVersion": 1,
+      "position": [
+        832,
+        768
+      ],
+      "id": "f392032a-2125-4365-8f9f-26af26adf6ac",
+      "name": "Ticket Progress Suggestion",
+      "credentials": {
+        "googlePalmApi": {
+          "id": "v5gGBxIpmyPrzosp",
+          "name": "Google Gemini(PaLM) Api account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "const MAX_RETRIES = 3;\n\nif (!$json.retry_count) {\n  $json.retry_count = 0;\n}\n\ntry {\n  const text = $json.content.parts[0].text;\n  const parsed = JSON.parse(text);\n  \n  return {\n      success: true,\n      sugested_stage: parsed.sugested_stage,\n      priority: parsed.priority,\n      response_confidence: parsed.response_confidence,\n      classification: parsed.classification,\n      retry_count: $json.retry_count\n    };\n} catch (err) {\n  if ($json.retry_count < MAX_RETRIES) {\n    return {\n        success: false,\n        error: err.message,\n        retry_count: $json.retry_count + 1,\n        retry: true\n      };\n  }\n\n  return {\n      success: false,\n      error: err.message,\n      retry: false,\n      retry_count: MAX_RETRIES\n    };\n}\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1104,
+        848
+      ],
+      "id": "ee7f84ac-1f06-4f9e-9704-bc4b42884dfe",
+      "name": "LLM Parser"
+    },
+    {
+      "parameters": {
+        "jsCode": "const { randomUUID } = require('crypto');\n\nreturn {\n      request_id: randomUUID(),\n      started_at: Date.now()\n    };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -32,
+        576
+      ],
+      "id": "938fa539-e54c-4b8a-91fe-f4e3dab03974",
+      "name": "UUID Generator"
+    },
+    {
+      "parameters": {
+        "url": "test.com/opportunities",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.3,
+      "position": [
+        144,
+        576
+      ],
+      "id": "4f19235c-8cf8-484a-988e-4002b9c86af7",
+      "name": "Opportunities Getter"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "1ce8e922-92d6-4806-a223-1461f507ac9e",
+              "leftValue": "={{ $json.close_date }}",
+              "rightValue": "",
+              "operator": {
+                "type": "string",
+                "operation": "notExists",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.filter",
+      "typeVersion": 2.2,
+      "position": [
+        336,
+        576
+      ],
+      "id": "60c222a2-31d8-41ff-86b3-691d60f0217e",
+      "name": "Filter Open Opportunities"
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f20d6a90-17fd-4180-a9d6-d3f9d6b59d87",
+              "name": "request_id",
+              "value": "={{ $('UUID Generator').item.json.request_id }}",
+              "type": "string"
+            },
+            {
+              "id": "8fafa547-6e07-4bad-8c23-79b4db2a280a",
+              "name": "workflow",
+              "value": "Revenue Ops Automation",
+              "type": "string"
+            },
+            {
+              "id": "a7da5d7f-0113-4166-93cc-1f95730e3b8c",
+              "name": "node",
+              "value": "={{ $prevNode.name }}",
+              "type": "string"
+            },
+            {
+              "id": "2a4e4520-b8a1-4d46-bbde-cce9e7c20e2e",
+              "name": "input",
+              "value": "={{ $('Opportunities Getter').last().json }}",
+              "type": "string"
+            },
+            {
+              "id": "9ff06083-a1fd-46cd-b554-dbc38214d28e",
+              "name": "output",
+              "value": "={{ $input }}",
+              "type": "string"
+            },
+            {
+              "id": "05062530-4537-4d6c-9ecd-8f0ad4b83ad9",
+              "name": "=success",
+              "value": "={{ $if( $('LLM Parser').isExecuted, $('LLM Parser').last().json.success, $if( $('Validate Opportunity Entry').isExecuted, $('Validate Opportunity Entry').last().json.valid, true)) }}",
+              "type": "string"
+            },
+            {
+              "id": "46a809e3-dd81-4aee-8468-b77c2f84112e",
+              "name": "error_message",
+              "value": "={{ $if( $('LLM Parser').isExecuted, $('LLM Parser').last().json.error || null, $if( $('Validate Opportunity Entry').isExecuted, $('Validate Opportunity Entry').last().json.errors || null, null)) }}",
+              "type": "string"
+            },
+            {
+              "id": "477e868f-7662-44ca-8846-23602851d4bf",
+              "name": "=retry_count",
+              "value": "={{ $if( $('LLM Parser').isExecuted, $('LLM Parser').last().json.retry_count || 0, 0) }}",
+              "type": "string"
+            },
+            {
+              "id": "0a0dfcf5-2eb0-4eaa-83d7-2e42870dee9f",
+              "name": "duration_ms",
+              "value": "={{ $now - $('UUID Generator').item.json.started_at }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        2384,
+        688
+      ],
+      "id": "0a122ccd-ef13-4792-880d-183639e62f5c",
+      "name": "Log Mapping"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "automation_logs",
+          "mode": "list",
+          "cachedResultName": "automation_logs"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "success": false
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "request_id",
+              "displayName": "request_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "workflow",
+              "displayName": "workflow",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "node",
+              "displayName": "node",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phase",
+              "displayName": "phase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "input",
+              "displayName": "input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "success",
+              "displayName": "success",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "retry_count",
+              "displayName": "retry_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "duration_ms",
+              "displayName": "duration_ms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        2592,
+        688
+      ],
+      "id": "8b47aed2-d7ea-4882-af32-80b1f1a64d24",
+      "name": "Log",
+      "credentials": {
+        "postgres": {
+          "id": "LFNBaOAiASwFN8AQ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "runOnceForEachItem",
+        "jsCode": "// Entrada vinda do nó anterior\nconst input = {\n  amount: $json.amount,\n  description: $json.description,\n  close_date: $json.close_date,\n  stage: $json.stage\n};\n\nconst errors = [];\nconst missing_fields = [];\n\n// -----------------------------\n// VALIDATION: amount\n// -----------------------------\nif (input.amount === undefined || input.amount === null) {\n  missing_fields.push(\"amount\");\n} else if (typeof input.amount !== \"number\") {\n  errors.push(\"amount must be a number\");\n} else if (input.amount < 0) {\n  errors.push(\"amount cannot be negative\");\n}\n\n// -----------------------------\n// VALIDATION: description\n// -----------------------------\nif (!input.description || input.description.trim() === \"\") {\n  missing_fields.push(\"description\");\n}\n\n// -----------------------------\n// VALIDATION: stage\n// -----------------------------\nconst validStages = [\n  \"Discovery\",\n  \"Proposal\",\n  \"Negotiation\",\n  \"Closed Won\",\n  \"Closed Lost\"\n];\n\nif (!input.stage) {\n  missing_fields.push(\"stage\");\n} else if (!validStages.includes(input.stage)) {\n  errors.push(`stage must be one of: ${validStages.join(\", \")}`);\n}\n\n// -----------------------------\n// RETURN FORMAT\n// -----------------------------\nreturn {\n      ...input,\n      valid: errors.length === 0 && missing_fields.length === 0,\n      errors,\n      missing_fields\n    };"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        544,
+        576
+      ],
+      "id": "ffbce3f5-7db4-4929-9a21-224bf718111c",
+      "name": "Validate Opportunity Entry"
+    },
+    {
+      "parameters": {
+        "sendTo": "gestevao04@gmail.com",
+        "subject": "Revenue Ops Automation Error",
+        "message": "=ALERTA: Falha após 3 tentativas \nOpportunity: {{ $('Opportunities Getter').item.json.id }}: {{ $('Opportunities Getter').item.json.name }}\nErro: {{ $('LLM Parser').item.json.error }}\nUUID: {{ $('UUID Generator').item.json.request_id }}",
+        "options": {}
+      },
+      "type": "n8n-nodes-base.gmail",
+      "typeVersion": 2.1,
+      "position": [
+        1648,
+        880
+      ],
+      "id": "626fe58e-3638-4253-b572-641727769d01",
+      "name": "E-Mail Error",
+      "webhookId": "8329a844-df2d-4d09-9fa4-fc38a71d16dc",
+      "credentials": {
+        "gmailOAuth2": {
+          "id": "7q5r4q13uOYoeWin",
+          "name": "Gmail account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "mode": "combine",
+        "combineBy": "combineByPosition",
+        "numberInputs": 3,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.merge",
+      "typeVersion": 3.2,
+      "position": [
+        1552,
+        240
+      ],
+      "id": "81611c03-2705-4bd2-8432-1f03700021c0",
+      "name": "Wait for LLMs"
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1dxhTUQ-QmPtcU2xMMmBWV0ox2mFpn8nlCxy4KI5OSxU",
+          "mode": "list",
+          "cachedResultName": "Revenue Ops Automation",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dxhTUQ-QmPtcU2xMMmBWV0ox2mFpn8nlCxy4KI5OSxU/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Main",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1dxhTUQ-QmPtcU2xMMmBWV0ox2mFpn8nlCxy4KI5OSxU/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "AI Summary": "={{ $('Summary LLM').item.json.content.parts[0].text }}",
+            "ID": "={{ $('Opportunities Getter').item.json.id }}",
+            "Title": "={{ $('Opportunities Getter').item.json.title }}",
+            "Description": "={{ $('Opportunities Getter').item.json.description }}",
+            "Classification": "={{ $('LLM Parser').item.json.classification }}",
+            "Priority": "={{ $('LLM Parser').item.json.priority }}",
+            "Next Steps": "={{ $('Next Steps LLM').item.json.content.parts[0].text }}",
+            "Insert Date": "={{ $now.format('dd/MM/yyyy hh:mm:ss') }}",
+            "Missing Fields": "={{ $('Validate Opportunity Entry').item.json.missing_fields || null }}",
+            "Response Confidence": "={{ $('LLM Parser').item.json.response_confidence }}",
+            "Amount": "={{ $('Opportunities Getter').item.json.amount }}",
+            "Owner": "={{ $('Opportunities Getter').item.json.owner }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "ID",
+              "displayName": "ID",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Title",
+              "displayName": "Title",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Description",
+              "displayName": "Description",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "AI Summary",
+              "displayName": "AI Summary",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Next Steps",
+              "displayName": "Next Steps",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Priority",
+              "displayName": "Priority",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Classification",
+              "displayName": "Classification",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Owner",
+              "displayName": "Owner",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Amount",
+              "displayName": "Amount",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Response Confidence",
+              "displayName": "Response Confidence",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Missing Fields",
+              "displayName": "Missing Fields",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "Insert Date",
+              "displayName": "Insert Date",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        1744,
+        256
+      ],
+      "id": "9d91023e-ecd4-448d-b6b3-729f107cdaa5",
+      "name": "Add Row to Revenue Excel",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wHvqestlSi0ivPBv",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "8143224507",
+        "text": "=⚠️ Deal com dados incompletos identificado\n\n• **Cliente:** {{ $('Opportunities Getter').last().json.name }}\n• **Problemas:** {{ $json.missing_fields }}\n• **Descrição recebida:** {{ $('Opportunities Getter').last().json.description }}\n\n⛔ A IA não conseguiu processar corretamente.\n👉 Verifique e complete os dados.",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2176,
+        256
+      ],
+      "id": "92f014bb-b81c-42a2-94a8-7627d79ef417",
+      "name": "Send Incomplete Data Text",
+      "webhookId": "27f39002-fc5d-414c-985e-6ba56522b324",
+      "credentials": {
+        "telegramApi": {
+          "id": "QuC0UrKDCtxf6ptJ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "chatId": "8143224507",
+        "text": "=🚀 Novo deal processado pela IA!\n\n• **Cliente:** {{ $json.Owner }}\n• **Valor:** {{ $json.Amount }}\n• **Prioridade:** {{ $json.Priority }}\n• **Resumo:** {{ $json['AI Summary'] }}\n• **Próximo passo sugerido:** {{ $json['Next Steps'] }}\n\n🔗 Ver no Sheets: \nhttps://docs.google.com/spreadsheets/d/1dxhTUQ-QmPtcU2xMMmBWV0ox2mFpn8nlCxy4KI5OSxU/edit?usp=sharing",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        2176,
+        80
+      ],
+      "id": "b9c6bf36-a328-4fa9-aab0-094ad56f2946",
+      "name": "Send Deal Text",
+      "webhookId": "27f39002-fc5d-414c-985e-6ba56522b324",
+      "credentials": {
+        "telegramApi": {
+          "id": "QuC0UrKDCtxf6ptJ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "7769be22-c496-4c1f-87db-5c79a35ba613",
+              "leftValue": "={{ $json['Missing Fields'] }}",
+              "rightValue": "",
+              "operator": {
+                "type": "array",
+                "operation": "empty",
+                "singleValue": true
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1936,
+        176
+      ],
+      "id": "db8c1772-fcf2-423f-b3ea-883cb8255510",
+      "name": "Is Complete Data"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "aaecda45-40eb-4e25-b20b-55a43fa2d329",
+              "leftValue": "={{ $('LLM Parser').last().json.retry_count < 3 }}",
+              "rightValue": false,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1456,
+        896
+      ],
+      "id": "2c312aa7-0d92-4447-8736-c25a648a7703",
+      "name": "Has Had 3 Retries"
+    },
+    {
+      "parameters": {
+        "jsCode": "return {\n  wait: 500 * ($('Parse LLM Response').last().json.retry_count ** 2)\n};\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        1648,
+        1056
+      ],
+      "id": "b175e20d-9d0e-45f6-8c8c-42478d3918fd",
+      "name": "Wait Before Next Retry"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger, Opportunities Getter and Filtering",
+        "height": 272,
+        "width": 944
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -256,
+        496
+      ],
+      "typeVersion": 1,
+      "id": "5ca540c7-983c-4896-bb22-3eb2e23b7ec8",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## AI Data Refinement",
+        "height": 672,
+        "width": 576,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        800,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "eeed8bd6-b06c-46b4-81cc-cf0c15a21791",
+      "name": "Sticky Note1"
+    },
+    {
+      "parameters": {
+        "content": "## Retry Flow",
+        "height": 368,
+        "width": 384,
+        "color": 3
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1424,
+        832
+      ],
+      "typeVersion": 1,
+      "id": "b3eca1ee-72a7-4bd8-ab14-924b6de52f1b",
+      "name": "Sticky Note3"
+    },
+    {
+      "parameters": {
+        "content": "## Logging",
+        "height": 224,
+        "width": 464,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        2352,
+        624
+      ],
+      "typeVersion": 1,
+      "id": "5e4c79a9-44e9-433f-ac69-141171a9154b",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "content": "## Saving Information on Excel and Message to User",
+        "height": 368,
+        "width": 864,
+        "color": 4
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        1472,
+        64
+      ],
+      "typeVersion": 1,
+      "id": "7bbce6d2-f87f-40e1-8bf5-1799d286bd35",
+      "name": "Sticky Note5"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "strict",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "aaecda45-40eb-4e25-b20b-55a43fa2d329",
+              "leftValue": "={{ $json.success }}",
+              "rightValue": true,
+              "operator": {
+                "type": "boolean",
+                "operation": "equals"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        1248,
+        848
+      ],
+      "id": "c9157a7f-42c0-4a54-b032-f81ce074c0ea",
+      "name": "Successful Parse"
+    }
+  ],
+  "pinData": {
+    "Opportunities Getter": [
+      {
+        "json": {
+          "id": "D-301",
+          "title": "API Security Upgrade",
+          "description": "Client wants to evaluate vulnerabilities and possibly expand contract.",
+          "amount": 18500,
+          "close_date": "2025-12-20",
+          "stage": "Discovery",
+          "owner": "Lucas"
+        }
+      },
+      {
+        "json": {
+          "id": "D-302",
+          "title": "Cloud Migration Phase 2",
+          "description": "",
+          "amount": 98000,
+          "close_date": "2025-11-15",
+          "stage": "Proposal",
+          "owner": "Fernanda"
+        }
+      },
+      {
+        "json": {
+          "id": "D-303",
+          "title": "Sales Training Renewal",
+          "description": "Renewal of training license, team expanded from 14 to 22.",
+          "amount": 32000,
+          "close_date": null,
+          "stage": "Negotiation",
+          "owner": "Giordano"
+        }
+      },
+      {
+        "json": {
+          "id": "D-304",
+          "title": "Onboarding Automation",
+          "description": "Client wants to automate onboarding steps using AI.",
+          "amount": 54000,
+          "close_date": "2026-01-08",
+          "stage": "Discovery",
+          "owner": "Giordano"
+        }
+      },
+      {
+        "json": {
+          "id": "D-305",
+          "title": "Data Warehouse Optimization",
+          "description": "Poor query performance, wants redesign proposal.",
+          "amount": -2500,
+          "close_date": "2025-12-01",
+          "stage": "Proposal",
+          "owner": "Lucas"
+        }
+      },
+      {
+        "json": {
+          "id": "D-306",
+          "title": "Workflow Builder PoC",
+          "description": "Small PoC to validate automation using Slack + Salesforce.",
+          "amount": 7800,
+          "close_date": null,
+          "stage": "Discovery",
+          "owner": "Fernanda"
+        }
+      },
+      {
+        "json": {
+          "id": "D-307",
+          "title": "Compliance Analytics",
+          "description": "Client is evaluating compliance AI dashboard.",
+          "amount": 41000,
+          "close_date": "2025-12-28",
+          "stage": "Closed Won",
+          "owner": "Lucas"
+        }
+      },
+      {
+        "json": {
+          "id": "D-308",
+          "title": "Internal Training Platform",
+          "description": "",
+          "amount": 11500,
+          "close_date": "2025-10-30",
+          "stage": "Discovery",
+          "owner": "Giordano"
+        }
+      },
+      {
+        "json": {
+          "id": "D-309",
+          "title": "Subscription Expansion",
+          "description": "Growing usage, considering doubling current plan.",
+          "amount": 27000,
+          "close_date": "2025-11-11",
+          "stage": "Negotiation",
+          "owner": "Fernanda"
+        }
+      },
+      {
+        "json": {
+          "id": "D-310",
+          "title": "Incident Response Automation",
+          "description": "Looking to automate Tier 1 triage with AI.",
+          "amount": 61500,
+          "close_date": "2026-02-18",
+          "stage": "Proposal",
+          "owner": "Giordano"
+        }
+      }
+    ]
+  },
+  "connections": {
+    "Schedule Trigger": {
+      "main": [
+        [
+          {
+            "node": "UUID Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Summary LLM": {
+      "main": [
+        [
+          {
+            "node": "Log Mapping",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait for LLMs",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Next Steps LLM": {
+      "main": [
+        [
+          {
+            "node": "Log Mapping",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Wait for LLMs",
+            "type": "main",
+            "index": 1
+          }
+        ]
+      ]
+    },
+    "Ticket Progress Suggestion": {
+      "main": [
+        [
+          {
+            "node": "Log Mapping",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "LLM Parser",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "LLM Parser": {
+      "main": [
+        [
+          {
+            "node": "Successful Parse",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UUID Generator": {
+      "main": [
+        [
+          {
+            "node": "Opportunities Getter",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Opportunities Getter": {
+      "main": [
+        [
+          {
+            "node": "Filter Open Opportunities",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Filter Open Opportunities": {
+      "main": [
+        [
+          {
+            "node": "Validate Opportunity Entry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Mapping": {
+      "main": [
+        [
+          {
+            "node": "Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log": {
+      "main": [
+        []
+      ]
+    },
+    "Validate Opportunity Entry": {
+      "main": [
+        [
+          {
+            "node": "Ticket Progress Suggestion",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Next Steps LLM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Summary LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "E-Mail Error": {
+      "main": [
+        [
+          {
+            "node": "Log Mapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait for LLMs": {
+      "main": [
+        [
+          {
+            "node": "Add Row to Revenue Excel",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Add Row to Revenue Excel": {
+      "main": [
+        [
+          {
+            "node": "Log Mapping",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Is Complete Data",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Incomplete Data Text": {
+      "main": [
+        [
+          {
+            "node": "Log Mapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send Deal Text": {
+      "main": [
+        [
+          {
+            "node": "Log Mapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "If": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Summary LLM",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Next Steps LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Incomplete": {
+      "main": [
+        [],
+        [
+          {
+            "node": "Summary LLM",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Complete Data": {
+      "main": [
+        [
+          {
+            "node": "Send Deal Text",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Send Incomplete Data Text",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Has Had 3 Retries": {
+      "main": [
+        [
+          {
+            "node": "E-Mail Error",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Wait Before Next Retry",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Wait Before Next Retry": {
+      "main": [
+        [
+          {
+            "node": "Ticket Progress Suggestion",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Successful Parse": {
+      "main": [
+        [
+          {
+            "node": "Wait for LLMs",
+            "type": "main",
+            "index": 2
+          }
+        ],
+        [
+          {
+            "node": "Has Had 3 Retries",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "4a6d26e0-c164-4294-afdc-a82022951f00",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "85f422af6f53507a661294ac9af8ad9c2aca3724b7b8e7bed2fde7df8bd517bf"
+  },
+  "id": "hcJhWOBp1VDp2hEu",
+  "tags": []
+}
