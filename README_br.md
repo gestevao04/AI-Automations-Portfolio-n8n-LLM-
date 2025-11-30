@@ -120,7 +120,7 @@ Automatizar o intake e tratamento de oportunidades (deals) usando IA, garantindo
 - IA gera um resumo estruturado (`ai_summary`), prioridade, classificação e next steps, com **validação rigorosa de JSON**.
 - Fluxo implementa **retentativas**, se a IA retornar valores inválidos ou fora do schema.
 - Writes no Google Sheets criam uma linha consolidada com timestamps, dados originais, enriquecimento e erros.
-- Slack envia dois tipos de mensagens:
+- Telegram envia dois tipos de mensagens:
   - Deals válidos → mensagem padrão
   - Deals com problemas → alerta destacando quais campos estão faltando
 - Logs de auditoria são gerados em nova aba da planilha, com `uuid`, status, etapa e payload de erro.

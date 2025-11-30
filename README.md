@@ -24,9 +24,9 @@ Automatically classify incoming leads as **high**, **medium**, or **low** priori
 
 ### 🧩 Tech Stack
 - n8n
-- OpenAI GPT-4o / GPT-4o-mini
+- Google Gemini 2.0 Flash
 - Google Sheets
-- Gmail (fallback notification)
+- Gmail
 
 ---
 
@@ -60,10 +60,11 @@ Automatically classify, summarize, and generate an initial response for support 
 
 ### 🧩 Technologies
 - n8n
-- Google Gemini (multiple models)
+- Webhook Trigger
+- Google Gemini 2.0 Flash
 - PostgreSQL
-- Gmail (error alerts)
-- JavaScript (validation and control logic)
+- Gmail
+- JavaScript
 
 ### 🖼 Screenshots
 ![workflow-2-img1.png](screenshots/helpdesk-ai/img1.png)
@@ -90,6 +91,48 @@ Automatically classify, summarize, and generate an initial response for support 
 
 ### 🧾 Exported JSON
 [AI Ticket Intake Workflow.json](workflows/AI%20Ticket%20Intake%20Workflow.json)
+
+## 📌 3. Revenue Ops Automation
+
+### 🎯 Objective
+Automate the intake and processing of deals using AI, ensuring **data validation**, **Gemini enrichment**, **automatic classification**, generation of **next steps**, **KPIs**, and **smart Telegram notifications**.
+
+### 🧩 Technologies
+- n8n
+- Schedule Trigger
+- HTTP Request (JSON Mapping)
+- Google Gemini 2.0 Flash
+- PostgreSQL
+- Google Sheets
+- Gmail
+- JavaScript
+- Telegram
+
+### 🖼 Screenshots
+![workflow-2-img1.png](screenshots/sales-ai/img1.png)
+![workflow-2-img1.png](screenshots/sales-ai/img2.png)
+![workflow-2-img1.png](screenshots/sales-ai/img3.png)
+![workflow-2-img1.png](screenshots/sales-ai/img4.png)
+![workflow-2-img1.png](screenshots/sales-ai/img5.png)
+
+---
+
+### 🧠 Technical Explanation
+- Webhook trigger receives incoming deals and converts each item of the array into **independent executions** (Split in Batches / Item Lists).
+- JavaScript validation checks required fields: `amount`, `description`, `close_date`, `stage`.
+- Invalid fields are collected into a `missing_fields` array and guide the conditional routing.
+- AI generates a structured object (`ai_summary`, priority, classification, next steps) with **strict JSON validation**.
+- The flow includes **retry logic** when the AI returns invalid or non-schema-compliant responses.
+- Google Sheets writes create a consolidated record: timestamps, original data, enriched fields, and errors.
+- Telegram sends two types of messages:
+  - Valid deals → standard notification
+  - Deals with missing data → alert with highlighted missing fields
+- Audit logs are stored in a separate sheet tab, including `uuid`, status, stage, and error payloads.
+
+---
+
+### 🧾 Exported JSON
+[Revenue Ops Automation Workflow.json](workflows/Revenue%20Ops%20Automation%20Workflow.json)
 
 ---
 ## 📎 Contact
