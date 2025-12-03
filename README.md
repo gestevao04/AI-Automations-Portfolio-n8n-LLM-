@@ -109,11 +109,11 @@ Automate the intake and processing of deals using AI, ensuring **data validation
 - Telegram
 
 ### 🖼 Screenshots
-![workflow-2-img1.png](screenshots/sales-ai/img1.png)
-![workflow-2-img1.png](screenshots/sales-ai/img2.png)
-![workflow-2-img1.png](screenshots/sales-ai/img3.png)
-![workflow-2-img1.png](screenshots/sales-ai/img4.png)
-![workflow-2-img1.png](screenshots/sales-ai/img5.png)
+![workflow-3-img1.png](screenshots/sales-ai/img1.png)
+![workflow-3-img2.png](screenshots/sales-ai/img2.png)
+![workflow-3-img3.png](screenshots/sales-ai/img3.png)
+![workflow-3-img3.png](screenshots/sales-ai/img4.png)
+![workflow-3-img3.png](screenshots/sales-ai/img5.png)
 
 ---
 
@@ -133,6 +133,63 @@ Automate the intake and processing of deals using AI, ensuring **data validation
 
 ### 🧾 Exported JSON
 [Revenue Ops Automation Workflow.json](workflows/Revenue%20Ops%20Automation%20Workflow.json)
+
+## 📌 4. Governance & Cost Control Automation
+
+### 🎯 Objective
+
+Create an internal service focused on governance, usage transparency, and cost tracking for AI-powered workflows.  
+This project implements a fully observable backend with structured logs, API-key–based access control, real-time error notifications, and automatic usage/cost reporting.  
+It mirrors the requirements expected from production-grade GenAI platforms in large companies.
+
+---
+
+### 🧩 Technologies
+
+- Spring Boot (Kotlin)
+- SQLite
+- JSON Logging
+- API Key Interceptor
+- Telegram
+- Google Sheets API
+- n8n
+- PostgreSQL
+
+---
+
+### 🖼 Screenshots
+![workflow-4-img1.png](screenshots/cost-management-ai/img1.png)
+![workflow-4-img2.png](screenshots/cost-management-ai/img2.png)
+![workflow-4-img3.png](screenshots/cost-management-ai/img3.png)
+
+---
+
+### 🧠 Technical Explanation
+
+This backend exposes a `/v1/process` endpoint protected by a custom API Key interceptor.  
+Every request is:
+
+1. **Authenticated** — validated against a list of allowed API keys
+2. **Logged** — using structured, JSON-formatted logs with correlation IDs
+3. **Monitored** — errors trigger Telegram webhook alerts with full context
+4. **Tracked** — request metadata (timestamp, user, endpoint, model name, tokens, cost) is appended to a Google Sheets cost ledger
+5. **Summarized** — an n8n automation could run a daily summary generating:
+  - total cost per model
+  - number of requests per API key
+  - error rate
+  - week-over-week deltas
+
+This combines governance, observability, compliance, and FinOps — exactly what real AI platform teams need.
+
+---
+
+### 🧾 Exported JSON
+[Governance & Cost Control Workflow.json](workflows/Governance%20%26%20Cost%20Control%20Workflow.json)
+
+---
+
+### 🔗 Link to Kotlin Project
+[Kotlin Project](https://github.com/gestevao04/governance-backend)
 
 ---
 ## 📎 Contact

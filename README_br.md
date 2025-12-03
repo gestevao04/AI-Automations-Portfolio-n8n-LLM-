@@ -130,6 +130,69 @@ Automatizar o intake e tratamento de oportunidades (deals) usando IA, garantindo
 ### 🧾 JSON Exportado
 [Revenue Ops Automation Workflow.json](workflows/Revenue%20Ops%20Automation%20Workflow.json)
 
+## 📌 4. Governança & Controle de Custos
+
+### 🎯 Objetivo
+
+Criar um serviço interno que garanta **transparência de uso**, **controle de acesso** e **monitoramento de custos** em fluxos de automação com IA.  
+O projeto simula exatamente o tipo de governança exigido em plataformas internas de IA em grandes empresas:
+- acesso seguro
+- auditoria centralizada
+- observabilidade
+- rastreabilidade de custos
+- alertas automáticos
+- relatórios consolidados
+
+---
+
+### 🧩 Tecnologias
+
+- Spring Boot (Kotlin)
+- SQLite
+- JSON Logging
+- API Key Interceptor
+- Telegram
+- Google Sheets API
+- n8n
+- PostgreSQL
+
+---
+
+### 🖼 Screenshots
+![workflow-4-img1.png](screenshots/cost-management-ai/img1.png)
+![workflow-4-img2.png](screenshots/cost-management-ai/img2.png)
+![workflow-4-img3.png](screenshots/cost-management-ai/img3.png)
+
+---
+
+### 🧠 Explicação Técnica
+
+Este backend expõe um endpoint `/v1/process` protegido por um interceptor de chave de API personalizado.
+
+Cada requisição é:
+
+1. **Autenticada** — validada em relação a uma lista de chaves de API permitidas
+2. **Registrada** — usando logs estruturados em formato JSON com IDs de correlação
+3. **Monitorada** — erros acionam alertas de webhook do Telegram com contexto completo
+4. **Rastreada** — os metadados da requisição (timestamp, usuário, endpoint, nome do modelo, tokens, custo) são adicionados a um registro de custos do Google Sheets
+5. **Resumida** — uma automação n8n pode executar um resumo diário gerando:
+   - custo total por modelo
+   - número de requisições por chave de API
+   - taxa de erros
+   - variações semanais
+
+Isso combina governança, observabilidade, conformidade e FinOps — exatamente o que as equipes de plataformas de IA precisam.
+
+---
+
+### 🧾 JSON Exportado
+[Governance & Cost Control Workflow.json](workflows/Governance%20%26%20Cost%20Control%20Workflow.json)
+
+---
+
+### 🔗 Link para o Projeto Kotlin
+[Kotlin Project](https://github.com/gestevao04/governance-backend)
+
 ---
 ## 📎 Contato
 

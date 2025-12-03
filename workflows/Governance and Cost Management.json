@@ -1,0 +1,613 @@
+{
+  "name": "Governance and Cost Management",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "governanca/ingest",
+        "responseMode": "lastNode",
+        "options": {}
+      },
+      "id": "a743f904-10d0-4f62-8eb6-cb65c95c6d50",
+      "name": "Webhook Entry",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 1,
+      "position": [
+        -448,
+        384
+      ],
+      "webhookId": "594ff07d-6c7b-492a-9115-841e03336105"
+    },
+    {
+      "parameters": {
+        "keepOnlySet": true,
+        "values": {
+          "string": [
+            {
+              "name": "model",
+              "value": "={{ $json.body.model }}"
+            },
+            {
+              "name": "tokens",
+              "value": "={{$json.body.tokens}}"
+            }
+          ],
+          "number": [
+            {
+              "name": "cost",
+              "value": "={{$json.body.amount}}"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "id": "e25c8feb-24ab-4647-8796-345ce31c0323",
+      "name": "Prepare Payload",
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 1,
+      "position": [
+        0,
+        384
+      ]
+    },
+    {
+      "parameters": {
+        "options": {}
+      },
+      "id": "39d5b763-0924-4464-915d-7cd9396f26c5",
+      "name": "Return Response",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1,
+      "position": [
+        976,
+        512
+      ]
+    },
+    {
+      "parameters": {
+        "chatId": "8143224507",
+        "text": "=🚨 High AI Cost Alert\nModel: {{ $json.model }}\nTokens: {{$json.tokens}}\nCost: {{$json.cost}}",
+        "additionalFields": {}
+      },
+      "type": "n8n-nodes-base.telegram",
+      "typeVersion": 1.2,
+      "position": [
+        448,
+        320
+      ],
+      "id": "b51c205b-cb90-4868-ad70-5cbbbc931443",
+      "name": "Send a text message",
+      "webhookId": "992f14bb-1b30-4c0b-9266-5602a85b8279",
+      "credentials": {
+        "telegramApi": {
+          "id": "QuC0UrKDCtxf6ptJ",
+          "name": "Telegram account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "operation": "append",
+        "documentId": {
+          "__rl": true,
+          "value": "1Bp3ZcMILtwPGl6mIqBpYDYODf0RAWdLWWPrGXd-NMxI",
+          "mode": "list",
+          "cachedResultName": "Governance and Cost Management",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Bp3ZcMILtwPGl6mIqBpYDYODf0RAWdLWWPrGXd-NMxI/edit?usp=drivesdk"
+        },
+        "sheetName": {
+          "__rl": true,
+          "value": "gid=0",
+          "mode": "list",
+          "cachedResultName": "Página1",
+          "cachedResultUrl": "https://docs.google.com/spreadsheets/d/1Bp3ZcMILtwPGl6mIqBpYDYODf0RAWdLWWPrGXd-NMxI/edit#gid=0"
+        },
+        "columns": {
+          "mappingMode": "defineBelow",
+          "value": {
+            "timestamp": "={{ $now }}",
+            "cost": "={{ $('Prepare Payload').item.json.cost }}",
+            "model": "={{ $('Prepare Payload').item.json.model }}",
+            "tokens": "={{ $('Prepare Payload').item.json.tokens }}",
+            "highCost": "={{ $('Prepare Payload').item.json.cost > 0.01 }}"
+          },
+          "matchingColumns": [],
+          "schema": [
+            {
+              "id": "timestamp",
+              "displayName": "timestamp",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "model",
+              "displayName": "model",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "tokens",
+              "displayName": "tokens",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "cost",
+              "displayName": "cost",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "highCost",
+              "displayName": "highCost",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true,
+              "removed": false
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.googleSheets",
+      "typeVersion": 4.7,
+      "position": [
+        640,
+        448
+      ],
+      "id": "c666be6c-d767-4e57-a2f1-51c67c8922c5",
+      "name": "Append row in sheet",
+      "credentials": {
+        "googleSheetsOAuth2Api": {
+          "id": "wHvqestlSi0ivPBv",
+          "name": "Google Sheets account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "assignments": {
+          "assignments": [
+            {
+              "id": "f20d6a90-17fd-4180-a9d6-d3f9d6b59d87",
+              "name": "request_id",
+              "value": "={{ $('UUID Generator').item.json.request_id }}",
+              "type": "string"
+            },
+            {
+              "id": "8fafa547-6e07-4bad-8c23-79b4db2a280a",
+              "name": "workflow",
+              "value": "Revenue Ops Automation",
+              "type": "string"
+            },
+            {
+              "id": "a7da5d7f-0113-4166-93cc-1f95730e3b8c",
+              "name": "node",
+              "value": "={{ $prevNode.name }}",
+              "type": "string"
+            },
+            {
+              "id": "2a4e4520-b8a1-4d46-bbde-cce9e7c20e2e",
+              "name": "input",
+              "value": "={{ $('Webhook Entry').item.json.body }}",
+              "type": "string"
+            },
+            {
+              "id": "9ff06083-a1fd-46cd-b554-dbc38214d28e",
+              "name": "output",
+              "value": "={{ $input }}",
+              "type": "string"
+            },
+            {
+              "id": "05062530-4537-4d6c-9ecd-8f0ad4b83ad9",
+              "name": "=success",
+              "value": "=true",
+              "type": "string"
+            },
+            {
+              "id": "46a809e3-dd81-4aee-8468-b77c2f84112e",
+              "name": "error_message",
+              "value": "=null",
+              "type": "string"
+            },
+            {
+              "id": "477e868f-7662-44ca-8846-23602851d4bf",
+              "name": "=retry_count",
+              "value": "=0",
+              "type": "string"
+            },
+            {
+              "id": "0a0dfcf5-2eb0-4eaa-83d7-2e42870dee9f",
+              "name": "duration_ms",
+              "value": "={{ $now - $('UUID Generator').item.json.started_at }}",
+              "type": "string"
+            }
+          ]
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.set",
+      "typeVersion": 3.4,
+      "position": [
+        944,
+        320
+      ],
+      "id": "11dd47ea-7c86-47a2-824a-35fce66f47a9",
+      "name": "Log Mapping"
+    },
+    {
+      "parameters": {
+        "schema": {
+          "__rl": true,
+          "mode": "list",
+          "value": "public"
+        },
+        "table": {
+          "__rl": true,
+          "value": "automation_logs",
+          "mode": "list",
+          "cachedResultName": "automation_logs"
+        },
+        "columns": {
+          "mappingMode": "autoMapInputData",
+          "value": {
+            "success": false
+          },
+          "matchingColumns": [
+            "id"
+          ],
+          "schema": [
+            {
+              "id": "id",
+              "displayName": "id",
+              "required": false,
+              "defaultMatch": true,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true,
+              "removed": false
+            },
+            {
+              "id": "request_id",
+              "displayName": "request_id",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "workflow",
+              "displayName": "workflow",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "node",
+              "displayName": "node",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "phase",
+              "displayName": "phase",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "input",
+              "displayName": "input",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "output",
+              "displayName": "output",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "object",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "success",
+              "displayName": "success",
+              "required": true,
+              "defaultMatch": false,
+              "display": true,
+              "type": "boolean",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "error_message",
+              "displayName": "error_message",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "string",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "retry_count",
+              "displayName": "retry_count",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "duration_ms",
+              "displayName": "duration_ms",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "number",
+              "canBeUsedToMatch": true
+            },
+            {
+              "id": "created_at",
+              "displayName": "created_at",
+              "required": false,
+              "defaultMatch": false,
+              "display": true,
+              "type": "dateTime",
+              "canBeUsedToMatch": true
+            }
+          ],
+          "attemptToConvertTypes": false,
+          "convertFieldsToString": false
+        },
+        "options": {}
+      },
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [
+        1168,
+        320
+      ],
+      "id": "0a476a71-44c4-46dd-9b74-9bc3c2e4ff78",
+      "name": "Log",
+      "credentials": {
+        "postgres": {
+          "id": "LFNBaOAiASwFN8AQ",
+          "name": "Postgres account"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "content": "## Logging",
+        "height": 224,
+        "width": 464,
+        "color": 5
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        896,
+        240
+      ],
+      "typeVersion": 1,
+      "id": "e52c74a9-53e3-43c9-bf05-29d1210f8319",
+      "name": "Sticky Note4"
+    },
+    {
+      "parameters": {
+        "jsCode": "const { randomUUID } = require('crypto');\n\nreturn {\n      request_id: randomUUID(),\n      started_at: Date.now()\n    };\n"
+      },
+      "type": "n8n-nodes-base.code",
+      "typeVersion": 2,
+      "position": [
+        -224,
+        384
+      ],
+      "id": "968f2301-4f34-4c85-9f45-96d5122b2886",
+      "name": "UUID Generator"
+    },
+    {
+      "parameters": {
+        "conditions": {
+          "options": {
+            "caseSensitive": true,
+            "leftValue": "",
+            "typeValidation": "loose",
+            "version": 2
+          },
+          "conditions": [
+            {
+              "id": "0afdbf65-73aa-4fab-8952-80d544c38b73",
+              "leftValue": "={{$json.cost}}",
+              "rightValue": 0.01,
+              "operator": {
+                "type": "number",
+                "operation": "gt"
+              }
+            }
+          ],
+          "combinator": "and"
+        },
+        "looseTypeValidation": true,
+        "options": {}
+      },
+      "type": "n8n-nodes-base.if",
+      "typeVersion": 2.2,
+      "position": [
+        224,
+        384
+      ],
+      "id": "2776b28c-c97b-4d9c-8172-8b097d80c45e",
+      "name": "Is Past Cost Threshold"
+    },
+    {
+      "parameters": {
+        "content": "## Trigger, and threshold validator",
+        "height": 224,
+        "width": 880
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        -496,
+        320
+      ],
+      "typeVersion": 1,
+      "id": "2732b5e4-bd7b-48b3-9d69-0f40ee35bcbe",
+      "name": "Sticky Note"
+    },
+    {
+      "parameters": {
+        "content": "## Message User and Save Data (Excel)",
+        "height": 368,
+        "width": 448,
+        "color": 6
+      },
+      "type": "n8n-nodes-base.stickyNote",
+      "position": [
+        416,
+        272
+      ],
+      "typeVersion": 1,
+      "id": "0d6a61f8-cc33-482a-aa2a-27a53207d41f",
+      "name": "Sticky Note1"
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Webhook Entry": {
+      "main": [
+        [
+          {
+            "node": "UUID Generator",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Prepare Payload": {
+      "main": [
+        [
+          {
+            "node": "Is Past Cost Threshold",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send a text message": {
+      "main": [
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log Mapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Append row in sheet": {
+      "main": [
+        [
+          {
+            "node": "Return Response",
+            "type": "main",
+            "index": 0
+          },
+          {
+            "node": "Log Mapping",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Log Mapping": {
+      "main": [
+        [
+          {
+            "node": "Log",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "UUID Generator": {
+      "main": [
+        [
+          {
+            "node": "Prepare Payload",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Is Past Cost Threshold": {
+      "main": [
+        [
+          {
+            "node": "Send a text message",
+            "type": "main",
+            "index": 0
+          }
+        ],
+        [
+          {
+            "node": "Append row in sheet",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "0f171ec5-aeb1-4650-8e0e-f21f549e701e",
+  "meta": {
+    "templateCredsSetupCompleted": true,
+    "instanceId": "85f422af6f53507a661294ac9af8ad9c2aca3724b7b8e7bed2fde7df8bd517bf"
+  },
+  "id": "o3LN7thBVSZ6GtbS",
+  "tags": []
+}
